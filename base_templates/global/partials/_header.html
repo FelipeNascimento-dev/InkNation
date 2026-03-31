@@ -3,13 +3,13 @@
 <div class="topbar">
     <div class="topbar-container">
         <div class="topbar-left">
-            <a href="#" class="topbar-logo">
+            <a href="{% url 'website:index' %}" class="topbar-logo">
                 <img src="{% static 'global/images/logo_png.png' %}" alt="Logo">
                 <span>InkNation</span>
             </a>
 
             <nav class="topbar-menu">
-                <a href="#">Início</a>
+                <a href="{% url 'website:index' %}">Início</a>
                 <a href="#">Sobre</a>
                 <a href="#">Serviços</a>
                 <a href="#">Projetos</a>
@@ -18,8 +18,54 @@
         </div>
 
         <div class="topbar-right">
-            <a href="#" class="btn-topbar btn-login">Login</a>
+            {% if user.is_authenticated %}
+            <div class="user-dropdown">
+                <button type="button" class="user-dropdown-toggle" onclick="toggleUserDropdown()">
+                    <div class="user-pic">
+                        <img class="user-profile-pic" src="{% static 'global/images/eu.jpeg' %}" alt="Usuário">
+                    </div>
+
+                    <span class="user-name">
+                        {{ user.username|default:user.first_name }}
+                    </span>
+
+                    <span class="arrow-icon">▼</span>
+                </button>
+
+                <ul class="user-dropdown-menu" id="userDropdownMenu">
+                    <li class="user-greeting">
+                        Olá, {{ user.username|default:user.first_name }}
+                    </li>
+                    <hr>
+                    <li><a href="#"><span><i class="fa-solid fa-user"></i></span> Meu Perfil</a></li>
+                    <li><a href="#"><span><i class="fa-solid fa-gear"></i></span> Configurações</a></li>
+                    <li><a href="#"><span><i class="fa-solid fa-question"></i></span> Ajuda</a></li>
+                    <li><a href="{% url 'inknation:logout_confirm' %}"><span><i class="fa-solid fa-arrow-right-from-bracket"></i></span> Sair</a></li>
+                </ul>
+            </div>
+            {% else %}
+            <a href="{% url 'inknation:login' %}" class="btn-topbar btn-login">Login</a>
             <a href="#" class="btn-topbar btn-cadastro">Cadastro</a>
+            {% endif %}
         </div>
     </div>
 </div>
+
+<script>
+    function toggleUserDropdown() {
+        const menu = document.getElementById('userDropdownMenu');
+        if (!menu) return;
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+
+    document.addEventListener('click', function (e) {
+        const button = document.querySelector('.user-dropdown-toggle');
+        const menu = document.getElementById('userDropdownMenu');
+
+        if (!button || !menu) return;
+
+        if (!button.contains(e.target) && !menu.contains(e.target)) {
+            menu.style.display = 'none';
+        }
+    });
+</script>

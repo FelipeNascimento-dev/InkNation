@@ -1,0 +1,164 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'global/css/style.css' %}">
+    <title>InkNation - Login</title>
+</head>
+
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+        min-height: 100vh;
+    }
+
+    .login-page {
+        min-height: calc(100vh - 80px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+    }
+
+    .login-box {
+        width: 100%;
+        max-width: 420px;
+        background: rgba(20, 20, 20, 0.96);
+        border: 1px solid #2b2b2b;
+        border-top: 4px solid #c40000;
+        border-radius: 16px;
+        padding: 35px 30px;
+        box-shadow: 0 10px 35px rgba(0, 0, 0, 0.45);
+    }
+
+    .login-box h1 {
+        margin: 0 0 10px;
+        text-align: center;
+        color: #ffffff;
+        font-size: 2rem;
+    }
+
+    .login-box p {
+        margin: 0 0 28px;
+        text-align: center;
+        color: #bdbdbd;
+        font-size: 0.95rem;
+    }
+
+    .form-group {
+        margin-bottom: 18px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #f1f1f1;
+        font-size: 0.95rem;
+        font-weight: 600;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 13px 14px;
+        border-radius: 10px;
+        border: 1px solid #333;
+        background: #111;
+        color: #fff;
+        font-size: 0.95rem;
+        outline: none;
+        transition: 0.3s ease;
+        box-sizing: border-box;
+    }
+
+    .form-group input:focus {
+        border-color: #e00000;
+        box-shadow: 0 0 0 3px rgba(224, 0, 0, 0.15);
+    }
+
+    .btn-login-submit {
+        width: 100%;
+        padding: 13px;
+        border: none;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #8b0000, #c40000, #ff1a1a);
+        color: #fff;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.3s ease;
+        margin-top: 8px;
+    }
+
+    .btn-login-submit:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 18px rgba(196, 0, 0, 0.25);
+    }
+
+    .login-extra {
+        margin-top: 18px;
+        text-align: center;
+        color: #bdbdbd;
+        font-size: 0.92rem;
+    }
+
+    .login-extra a {
+        color: #ff4d4d;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .login-extra a:hover {
+        color: #ff8080;
+    }
+
+    @media (max-width: 500px) {
+        .login-box {
+            padding: 28px 20px;
+        }
+
+        .login-box h1 {
+            font-size: 1.7rem;
+        }
+    }
+</style>
+
+<body>
+    <div class="topbar">
+        <div class="topbar-container">
+            <div class="topbar-left">
+                <a href="{% url 'website:index' %}" class="topbar-logo">
+                    <img src="{% static 'global/images/logo_png.png' %}" alt="Logo">
+                    <span>InkNation</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <main class="login-page">
+        <div class="login-box">
+            <h1>Login</h1>
+            <p>Acesse sua conta para continuar</p>
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="username">Usuário ou E-mail</label>
+                    <input type="text" name="username" id="username" placeholder="Digite seu usuário ou e-mail">
+                </div>
+                <div class="form-group">
+                    <label for="password">Senha</label>
+                    <input type="password" name="password" id="password" placeholder="Digite sua senha">
+                </div>
+                <button type="submit" class="btn-login-submit">Entrar</button>
+            </form>
+            <div class="login-extra">
+                Não possui conta? <a href="#">Cadastre-se</a>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

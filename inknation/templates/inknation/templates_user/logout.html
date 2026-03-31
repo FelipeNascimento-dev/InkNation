@@ -1,0 +1,180 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InkNation - Logout</title>
+    <link rel="stylesheet" href="{% static 'global/css/style.css' %}">
+</head>
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+        min-height: 100vh;
+    }
+
+    .logout-page {
+        min-height: calc(100vh - 80px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+    }
+
+    .logout-box {
+        width: 100%;
+        max-width: 460px;
+        background: rgba(20, 20, 20, 0.96);
+        border: 1px solid #2b2b2b;
+        border-top: 4px solid #c40000;
+        border-radius: 16px;
+        padding: 36px 30px;
+        box-shadow: 0 10px 35px rgba(0, 0, 0, 0.45);
+        text-align: center;
+    }
+
+    .logout-icon {
+        width: 72px;
+        height: 72px;
+        margin: 0 auto 20px;
+        border-radius: 50%;
+        background: rgba(255, 0, 0, 0.12);
+        border: 1px solid rgba(255, 0, 0, 0.25);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: #ff4d4d;
+    }
+
+    .logout-box h1 {
+        margin: 0 0 10px;
+        color: #ffffff;
+        font-size: 2rem;
+    }
+
+    .logout-box p {
+        margin: 0 0 28px;
+        color: #bdbdbd;
+        font-size: 0.98rem;
+        line-height: 1.6;
+    }
+
+    .logout-user {
+        display: inline-block;
+        margin-bottom: 24px;
+        padding: 10px 16px;
+        border-radius: 10px;
+        background: rgba(255, 0, 0, 0.08);
+        border: 1px solid rgba(255, 0, 0, 0.20);
+        color: #fff;
+        font-weight: 600;
+    }
+
+    .logout-actions {
+        display: flex;
+        gap: 14px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .btn-logout,
+    .btn-cancel {
+        min-width: 160px;
+        padding: 13px 18px;
+        border-radius: 10px;
+        font-size: 0.96rem;
+        font-weight: 700;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        transition: 0.3s ease;
+    }
+
+    .btn-logout {
+        background: linear-gradient(135deg, #8b0000, #c40000, #ff1a1a);
+        color: #fff;
+    }
+
+    .btn-logout:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 18px rgba(196, 0, 0, 0.25);
+    }
+
+    .btn-cancel {
+        background: transparent;
+        color: #fff;
+        border: 1px solid #444;
+    }
+
+    .btn-cancel:hover {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: #666;
+    }
+
+    @media (max-width: 520px) {
+        .logout-box {
+            padding: 28px 20px;
+        }
+
+        .logout-box h1 {
+            font-size: 1.7rem;
+        }
+
+        .logout-actions {
+            flex-direction: column;
+        }
+
+        .btn-logout,
+        .btn-cancel {
+            width: 100%;
+        }
+    }
+</style>
+
+<body>
+    <div class="topbar">
+        <div class="topbar-container">
+            <div class="topbar-left">
+                <a href="{% url 'website:index' %}" class="topbar-logo">
+                    <img src="{% static 'global/images/logo_png.png' %}" alt="Logo">
+                    <span>InkNation</span>
+                </a>
+                <nav class="topbar-menu">
+                    <a href="{% url 'website:index' %}">Início</a>
+                    <a href="#">Sobre</a>
+                    <a href="#">Serviços</a>
+                    <a href="#">Projetos</a>
+                    <a href="#">Contato</a>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <main class="logout-page">
+        <div class="logout-box">
+            <div class="logout-icon">↩</div>
+            <h1>Sair da conta</h1>
+            <p>
+                Você tem certeza que deseja encerrar sua sessão?
+            </p>
+            {% if user.is_authenticated %}
+            <div class="logout-user">
+                Usuário: {{ user.username|default:user.first_name }}
+            </div>
+            {% endif %}
+            <div class="logout-actions">
+                <form method="post" action="{% url 'inknation:logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-logout">Confirmar Logout</button>
+                </form>
+
+                <a href="{% url 'website:index' %}" class="btn-cancel">Cancelar</a>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
