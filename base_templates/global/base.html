@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    {% include 'global/partials/_head.html' %}
+</head>
+
+<body>
+    {% include 'global/partials/_header.html' %}
+    <div class="content-container">
+        {% block content %}
+
+           
+
+        {% endblock %}
+    </div> 
+        <!-- {% if messages %}
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                {% for message in messages %}
+                (function () {
+                    const bg = "{% if message.level_tag == 'error' %}#e74c3c{% elif message.level_tag == 'warning' %}#f1c40f{% elif message.level_tag == 'info' %}#3498db{% else %}#2ecc71{% endif %}";
+                    Toastify({
+                        text: "{{ message|escapejs }}",
+                        duration: 5000,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: bg,
+                        stopOnFocus: true,
+                        close: true,
+                    }).showToast();
+                })();
+                {% endfor %}
+            });
+        </script>
+        {% endif %} -->
+</body>
+
+</html>
