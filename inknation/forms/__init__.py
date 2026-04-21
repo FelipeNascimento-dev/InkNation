@@ -1,0 +1,1 @@
+from .user_forms.register_form import RegisterForm
