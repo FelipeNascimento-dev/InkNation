@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}{{ studio.name }} — InkNation{% endblock %}
+
+{% block content %}
+<header class="ink-studio-header">
+    <h1>{{ studio.name }}</h1>
+    <p>{{ studio.address }}, {{ studio.city }}/{{ studio.state }}</p>
+</header>
+
+<section class="ink-artists">
+    <h2>Artistas</h2>
+    {% for artist in studio.artists.all %}
+    <article class="ink-artist-card">
+        <h3>{{ artist.name }}</h3>
+        {% if artist.specialties %}<p>{{ artist.specialties }}</p>{% endif %}
+        <div class="ink-portfolio-grid">
+            {% for item in artist.portfolio_items.all %}
+            <img src="{{ item.image.url }}" alt="{{ item.title|default:artist.name }}">
+            {% endfor %}
+        </div>
+    </article>
+    {% empty %}
+    <p>Nenhum artista cadastrado.</p>
+    {% endfor %}
+</section>
+
+{% if can_request_budget %}
+<section class="ink-budget-section">
+    <h2>Solicitar orçamento</h2>
+    <form method="post" action="{% url 'budget-create' slug=studio.slug %}" enctype="multipart/form-data" class="ink-form">
+        {% csrf_token %}
+        {{ budget_form.as_p }}
+        <button type="submit" class="ink-btn">Enviar orçamento</button>
+    </form>
+</section>
+{% endif %}
+{% endblock %}

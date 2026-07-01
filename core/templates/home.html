@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}InkNation — Encontre seu estúdio{% endblock %}
+
+{% block content %}
+<section class="ink-home-map">
+    <div id="map" class="ink-map"></div>
+</section>
+
+<section class="ink-carousel">
+    <h2>Estúdios em destaque</h2>
+    <div class="ink-carousel-track">
+        {% for studio in featured_studios %}
+        <a href="{% url 'studio-detail' slug=studio.slug %}" class="ink-carousel-card">
+            <h3>{{ studio.name }}</h3>
+            <p>{{ studio.city }}/{{ studio.state }}</p>
+        </a>
+        {% empty %}
+        <p>Nenhum estúdio ativo no momento.</p>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{% static 'js/home-map.js' %}"></script>
+{% endblock %}

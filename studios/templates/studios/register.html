@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Cadastrar estúdio — InkNation{% endblock %}
+
+{% block content %}
+<h1>Cadastrar estúdio</h1>
+<form method="post" class="ink-form">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="ink-btn">Enviar para aprovação</button>
+</form>
+{% endblock %}

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}InkNation{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/inknation.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <nav class="ink-nav">
+        <a href="{% url 'home' %}" class="ink-logo">InkNation</a>
+        <div class="ink-nav-links">
+            {% if user.is_authenticated %}
+                <span>{{ user.username }}</span>
+                {% if user.role == 'owner' %}
+                    <a href="{% url 'studio-register' %}">Cadastrar estúdio</a>
+                {% endif %}
+                <a href="{% url 'accounts:logout' %}">Sair</a>
+            {% else %}
+                <a href="{% url 'accounts:login' %}">Entrar</a>
+                <a href="{% url 'accounts:register' %}">Cadastrar</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    {% if messages %}
+    <ul class="ink-messages">
+        {% for message in messages %}
+        <li class="ink-message ink-message-{{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <main class="ink-main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="ink-footer">
+        <p>&copy; InkNation</p>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

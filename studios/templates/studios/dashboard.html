@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — {{ studio.name }}{% endblock %}
+
+{% block content %}
+<h1>Dashboard — {{ studio.name }}</h1>
+
+<section class="metrics-owner" {% if not is_owner %}hidden{% endif %}>
+    <h2>Métricas do dono</h2>
+    <ul>
+        <li>Artistas ativos: {{ artist_count }}</li>
+        <li>Total de orçamentos: {{ budget_count }}</li>
+    </ul>
+</section>
+
+<section class="metrics-staff" {% if not is_staff %}hidden{% endif %}>
+    <h2>Métricas operacionais</h2>
+    <ul>
+        <li>Orçamentos pendentes: {{ pending_budgets }}</li>
+    </ul>
+</section>
+
+<ul class="ink-dashboard-links">
+    {% for artist in studio.artists.all %}
+    <li><a href="{% url 'portfolio-edit' slug=studio.slug artist_id=artist.id %}">Editar portfólio — {{ artist.name }}</a></li>
+    {% endfor %}
+</ul>
+{% endblock %}

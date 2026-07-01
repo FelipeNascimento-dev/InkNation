@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Portfólio — {{ artist.name }}{% endblock %}
+
+{% block content %}
+<h1>Portfólio — {{ artist.name }}</h1>
+<p><a href="{% url 'studio-dashboard' slug=studio.slug %}">Voltar ao dashboard</a></p>
+
+<form method="post" enctype="multipart/form-data" class="ink-form">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="ink-btn">Adicionar item</button>
+</form>
+
+<div class="ink-portfolio-grid">
+    {% for item in portfolio_items %}
+    <figure>
+        <img src="{{ item.image.url }}" alt="{{ item.title|default:artist.name }}">
+        {% if item.title %}<figcaption>{{ item.title }}</figcaption>{% endif %}
+    </figure>
+    {% endfor %}
+</div>
+{% endblock %}

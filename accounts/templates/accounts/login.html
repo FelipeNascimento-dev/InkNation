@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}Entrar — InkNation{% endblock %}
+
+{% block content %}
+<h1>Entrar</h1>
+<form method="post" class="ink-form">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="ink-btn">Entrar</button>
+</form>
+<p>Não tem conta? <a href="{% url 'accounts:register' %}">Cadastre-se</a></p>
+{% endblock %}
