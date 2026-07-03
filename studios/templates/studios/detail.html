@@ -1,74 +1,95 @@
 {% extends "base.html" %}
 
 {% block title %}{{ studio.name }} — InkNation{% endblock %}
+{% block main_class %} ink-main-detail{% endblock %}
 
 {% block content %}
-<header class="ink-studio-header">
-    <h1>{{ studio.name }}</h1>
-    <p>{{ studio.full_address }}</p>
-    {% if not studio.is_active %}
-    <p class="ink-badge ink-badge-pending">Aguardando aprovação</p>
-    {% endif %}
-    {% if can_manage %}
-    <p><a href="{% url 'studio-dashboard' slug=studio.slug %}">Ir para o dashboard</a></p>
-    {% endif %}
+<header class="ink-studio-hero">
+    <img
+        class="ink-studio-hero-bg"
+        src="{{ studio_cover_url }}"
+        alt=""
+        aria-hidden="true"
+        loading="eager"
+    >
+    <div class="ink-studio-hero-overlay"></div>
+    <div class="ink-studio-hero-content">
+        <p class="ink-studio-hero-location">{{ studio.city }} · {{ studio.state }}</p>
+        <h1>{{ studio.name }}</h1>
+        <p class="ink-studio-hero-address">{{ studio.full_address }}</p>
+        <div class="ink-studio-hero-meta">
+            <span>{{ artist_count }} artista{{ artist_count|pluralize }}</span>
+            {% if not studio.is_active %}
+            <span class="ink-badge ink-badge-pending">Aguardando aprovação</span>
+            {% endif %}
+        </div>
+        {% if can_manage %}
+        <p class="ink-studio-hero-actions">
+            <a href="{% url 'studio-dashboard' slug=studio.slug %}" class="ink-btn ink-btn-outline">Ir para o dashboard</a>
+        </p>
+        {% endif %}
+    </div>
 </header>
 
-<section class="ink-artists">
-    <h2>Artistas</h2>
-    {% for artist in studio.artists.all %}
-    <article class="ink-artist-card">
-        <h3>{{ artist.name }}</h3>
-        {% if artist.bio %}<p>{{ artist.bio }}</p>{% endif %}
-        {% if artist.specialties %}<p><strong>Especialidades:</strong> {{ artist.specialties }}</p>{% endif %}
-        <div class="ink-portfolio-grid">
-            {% for item in artist.portfolio_items.all %}
-            <img src="{{ item.image.url }}" alt="{{ artist.name }}">
-            {% endfor %}
+<div class="ink-studio-detail-body">
+    <section class="ink-artists">
+        <h2>Artistas</h2>
+        {% for artist in studio.artists.all %}
+        <article class="ink-artist-card">
+            <h3>{{ artist.name }}</h3>
+            {% if artist.bio %}<p>{{ artist.bio }}</p>{% endif %}
+            {% if artist.specialties %}<p><strong>Especialidades:</strong> {{ artist.specialties }}</p>{% endif %}
+            <div class="ink-portfolio-grid">
+                {% for item in artist.portfolio_items.all %}
+                <img src="{{ item.image.url }}" alt="{{ artist.name }}" loading="lazy">
+                {% empty %}
+                <p class="ink-portfolio-empty">Portfólio em breve.</p>
+                {% endfor %}
+            </div>
+        </article>
+        {% empty %}
+        <p>Nenhum artista cadastrado.</p>
+        {% endfor %}
+    </section>
+
+    {% if can_request_budget %}
+    <section class="ink-budget-section">
+        <button type="button" class="ink-btn" id="ink-budget-open">Solicitar orçamento</button>
+    </section>
+
+    <div id="ink-budget-modal" class="ink-modal" hidden>
+        <div class="ink-modal-backdrop"></div>
+        <div class="ink-modal-dialog" role="dialog" aria-labelledby="ink-budget-title" aria-modal="true">
+            <header class="ink-modal-header">
+                <h2 id="ink-budget-title">Solicitar orçamento</h2>
+                <button type="button" class="ink-modal-close" id="ink-budget-close" aria-label="Fechar">&times;</button>
+            </header>
+            <form
+                id="ink-budget-form"
+                class="ink-form"
+                method="post"
+                action="{% url 'budget-create' slug=studio.slug %}"
+                enctype="multipart/form-data"
+            >
+                {% csrf_token %}
+                <p>
+                    <label for="id_artist">Artista</label>
+                    {{ budget_form.artist }}
+                </p>
+                <p>
+                    <label for="id_description">Descrição da tatuagem</label>
+                    {{ budget_form.description }}
+                </p>
+                <p>
+                    <label for="id_reference_image">Imagem de referência (opcional)</label>
+                    {{ budget_form.reference_image }}
+                </p>
+                <button type="submit" class="ink-btn">Enviar orçamento</button>
+            </form>
         </div>
-    </article>
-    {% empty %}
-    <p>Nenhum artista cadastrado.</p>
-    {% endfor %}
-</section>
-
-{% if can_request_budget %}
-<section class="ink-budget-section">
-    <button type="button" class="ink-btn" id="ink-budget-open">Solicitar orçamento</button>
-</section>
-
-<div id="ink-budget-modal" class="ink-modal" hidden>
-    <div class="ink-modal-backdrop"></div>
-    <div class="ink-modal-dialog" role="dialog" aria-labelledby="ink-budget-title" aria-modal="true">
-        <header class="ink-modal-header">
-            <h2 id="ink-budget-title">Solicitar orçamento</h2>
-            <button type="button" class="ink-modal-close" id="ink-budget-close" aria-label="Fechar">&times;</button>
-        </header>
-        <form
-            id="ink-budget-form"
-            class="ink-form"
-            method="post"
-            action="{% url 'budget-create' slug=studio.slug %}"
-            enctype="multipart/form-data"
-        >
-            {% csrf_token %}
-            <p>
-                <label for="id_artist">Artista</label>
-                {{ budget_form.artist }}
-            </p>
-            <p>
-                <label for="id_description">Descrição da tatuagem</label>
-                {{ budget_form.description }}
-            </p>
-            <p>
-                <label for="id_reference_image">Imagem de referência (opcional)</label>
-                {{ budget_form.reference_image }}
-            </p>
-            <button type="submit" class="ink-btn">Enviar orçamento</button>
-        </form>
     </div>
+    {% endif %}
 </div>
-{% endif %}
 {% endblock %}
 
 {% block extra_js %}

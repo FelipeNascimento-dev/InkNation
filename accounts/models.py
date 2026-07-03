@@ -4,7 +4,7 @@ import uuid
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models, transaction
 
-from core.constants import CLIENT, ROLE_CHOICES
+from core.constants import CLIENT, ROLE_CHOICES, SYSTEM_ADMIN
 from core.validators import validate_cpf
 
 
@@ -21,6 +21,7 @@ class CustomUserManager(BaseUserManager):
     def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('role', SYSTEM_ADMIN)
         if extra_fields.get('is_staff') is not True:
             raise ValueError('Superusuário precisa ter is_staff=True.')
         if extra_fields.get('is_superuser') is not True:

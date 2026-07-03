@@ -1,7 +1,7 @@
-from django.core.files.storage import default_storage
 from django.db.models import Count, OuterRef, Subquery
 from django.views.generic import TemplateView
 
+from core.utils.studio_media import resolve_studio_cover_url
 from studios.models import PortfolioItem, Studio
 
 
@@ -24,10 +24,10 @@ class HomeView(TemplateView):
         )
 
         for studio in studios:
-            if studio.cover_image:
-                studio.cover_url = default_storage.url(studio.cover_image)
-            else:
-                studio.cover_url = None
+            studio.cover_url = resolve_studio_cover_url(
+                studio.cover_image,
+                studio.state,
+            )
 
         context['featured_studios'] = studios
         return context

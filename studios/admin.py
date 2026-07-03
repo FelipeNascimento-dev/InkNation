@@ -2,6 +2,8 @@ from django.contrib import admin, messages
 
 from studios.models import (
     APPROVAL_STATUS_APPROVED,
+    APPROVAL_STATUS_PENDING,
+    APPROVAL_STATUS_REJECTED,
     PortfolioItem,
     Studio,
     StudioApprovalRequest,
@@ -20,20 +22,51 @@ class StudioApprovalRequestInline(admin.StackedInline):
 def approve_studio(modeladmin, request, queryset):
     approved = 0
     for studio in queryset:
+        owner = studio.owners.first()
+        if not owner:
+            modeladmin.message_user(
+                request,
+                f'Estúdio "{studio.name}" não possui proprietário vinculado.',
+                messages.ERROR,
+            )
+            continue
         studio.is_active = True
         studio.save(update_fields=['is_active', 'updated_at'])
         approval, _ = StudioApprovalRequest.objects.get_or_create(
             studio=studio,
-            defaults={'requested_by': studio.owners.first(), 'status': 'pending'},
+            defaults={'requested_by': owner, 'status': APPROVAL_STATUS_PENDING},
         )
         if approval.status != APPROVAL_STATUS_APPROVED:
             approval.status = APPROVAL_STATUS_APPROVED
             approval.save(update_fields=['status', 'updated_at'])
         approved += 1
+    if approved:
+        modeladmin.message_user(
+            request,
+            f'{approved} estúdio(s) aprovado(s).',
+            messages.SUCCESS,
+        )
+
+
+@admin.action(description='Rejeitar estúdio selecionado')
+def reject_studio(modeladmin, request, queryset):
+    rejected = 0
+    for studio in queryset:
+        owner = studio.owners.first()
+        studio.is_active = False
+        studio.save(update_fields=['is_active', 'updated_at'])
+        if owner:
+            approval, _ = StudioApprovalRequest.objects.get_or_create(
+                studio=studio,
+                defaults={'requested_by': owner, 'status': APPROVAL_STATUS_PENDING},
+            )
+            approval.status = APPROVAL_STATUS_REJECTED
+            approval.save(update_fields=['status', 'updated_at'])
+        rejected += 1
     modeladmin.message_user(
         request,
-        f'{approved} estúdio(s) aprovado(s).',
-        messages.SUCCESS,
+        f'{rejected} estúdio(s) rejeitado(s).',
+        messages.WARNING,
     )
 
 
@@ -45,7 +78,7 @@ class StudioAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     filter_horizontal = ('owners', 'staffs')
     inlines = [StudioApprovalRequestInline]
-    actions = [approve_studio]
+    actions = [approve_studio, reject_studio]
 
 
 @admin.register(StudioApprovalRequest)

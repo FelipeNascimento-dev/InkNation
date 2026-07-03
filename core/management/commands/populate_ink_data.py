@@ -1,12 +1,14 @@
 """Popula o banco com cenário de demonstração do InkNation."""
 
-from io import BytesIO
-
 from django.contrib.auth import get_user_model
-from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
-from PIL import Image
+
+from core.utils.seed_images import (
+    ensure_static_default_covers,
+    fetch_portfolio_image,
+    is_placeholder_image,
+)
 
 from budgets.models import (
     BUDGET_STATUS_ANSWERED,
@@ -173,13 +175,6 @@ SEED_STUDIOS = [
 ]
 
 
-def _placeholder_image(name='placeholder.png'):
-    img = Image.new('RGB', (120, 120), color=(26, 26, 26))
-    buffer = BytesIO()
-    img.save(buffer, format='PNG')
-    return ContentFile(buffer.getvalue(), name=name)
-
-
 class Command(BaseCommand):
     help = 'Popula o banco com usuários, estúdios, artistas e orçamentos de demonstração.'
 
@@ -194,17 +189,25 @@ class Command(BaseCommand):
             action='store_true',
             help='Não pedir confirmação ao usar --flush.',
         )
+        parser.add_argument(
+            '--refresh-images',
+            action='store_true',
+            help='Substitui imagens de portfólio (inclui placeholders antigos).',
+        )
 
     def handle(self, *args, **options):
         if options['flush']:
             self._confirm_flush(options['no_input'])
             self._flush_data()
 
+        self.stdout.write('Baixando capas padrão para static/...')
+        ensure_static_default_covers(stdout=self.stdout)
+
         with transaction.atomic():
             users = self._create_users()
             studios = self._create_studios(users)
             artists = self._create_artists(studios)
-            self._create_portfolio(artists)
+            self._create_portfolio(artists, refresh=options['refresh_images'])
             self._create_budgets(users, studios, artists)
 
         self.stdout.write(self.style.SUCCESS('Dados de demonstração criados com sucesso.'))
@@ -323,18 +326,32 @@ class Command(BaseCommand):
             artists.append(artist)
         return artists
 
-    def _create_portfolio(self, artists):
+    def _create_portfolio(self, artists, refresh=False):
         for artist in artists:
-            if artist.portfolio_items.exists():
+            existing = list(artist.portfolio_items.all())
+            needs_images = not existing or refresh or any(
+                is_placeholder_image(item.image) for item in existing
+            )
+
+            if not needs_images:
                 continue
-            for index in range(1, 3):
+
+            if existing:
+                for item in existing:
+                    item.image.delete(save=False)
+                    item.delete()
+
+            saved_count = 0
+            for index in range(1, 4):
+                content = fetch_portfolio_image(artist.name, index)
                 item = PortfolioItem(artist=artist)
-                item.image.save(
-                    f'{artist.pk}-{index}.png',
-                    _placeholder_image(f'portfolio-{index}.png'),
-                    save=True,
+                item.image.save(f'{artist.pk}-{index}.jpg', content, save=True)
+                saved_count += 1
+
+            if saved_count:
+                self.stdout.write(
+                    f'  Portfólio com imagens criado para {artist.name} ({saved_count})',
                 )
-            self.stdout.write(f'  Portfólio criado para {artist.name}')
 
     def _create_budgets(self, users, studios, artists):
         if BudgetRequest.objects.exists():

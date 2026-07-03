@@ -154,7 +154,10 @@ class StudioSmokeTests(TestCase):
         self.assertEqual(len(data), 1)
         self.assertEqual(
             set(data[0].keys()),
-            {'id', 'name', 'latitude', 'longitude', 'slug'},
+            {
+                'id', 'name', 'latitude', 'longitude', 'slug',
+                'city', 'state', 'artist_count', 'cover_url',
+            },
         )
 
     def test_dashboard_forbidden_for_client(self):

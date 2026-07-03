@@ -1,8 +1,13 @@
-from django.test import Client, RequestFactory, TestCase
+from django.test import Client, TestCase
 from django.urls import reverse
 
 from accounts.models import CustomUser
-from core.constants import STUDIO_OWNER
+from core.constants import CLIENT, STUDIO_OWNER, STUDIO_STAFF, SYSTEM_ADMIN
+from core.utils.studio_access import (
+    user_can_manage_studio,
+    user_can_request_budget,
+    user_can_view_studio,
+)
 from core.validators import validate_cnpj, validate_cpf
 from django.core.exceptions import ValidationError
 from studios.models import Studio
@@ -69,3 +74,66 @@ class HomeSmokeTests(TestCase):
         response = self.client.get(reverse('home'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Map Studio')
+        self.assertContains(response, 'Estúdios em destaque')
+        self.assertContains(response, 'que combina com você')
+
+
+class StudioAccessTests(TestCase):
+    def setUp(self):
+        self.owner = CustomUser.objects.create_user(
+            email='owner-access@example.com',
+            password='testpass123',
+            cpf='15350946056',
+            phone='11977777777',
+            role=STUDIO_OWNER,
+        )
+        self.staff = CustomUser.objects.create_user(
+            email='staff-access@example.com',
+            password='testpass123',
+            cpf='11144477735',
+            phone='11966666666',
+            role=STUDIO_STAFF,
+        )
+        self.client_user = CustomUser.objects.create_user(
+            email='client-access@example.com',
+            password='testpass123',
+            cpf='12345678909',
+            phone='11955555555',
+            role=CLIENT,
+        )
+        self.inactive_studio = Studio.objects.create(
+            name='Pending Studio',
+            cnpj='27865757000102',
+            address_street='Rua A',
+            address_number='1',
+            neighborhood='Centro',
+            city='São Paulo',
+            state='SP',
+            cep='01001000',
+            is_active=False,
+        )
+        self.inactive_studio.owners.add(self.owner)
+        self.inactive_studio.staffs.add(self.staff)
+
+    def test_owner_can_view_inactive_studio(self):
+        self.assertTrue(user_can_view_studio(self.owner, self.inactive_studio))
+
+    def test_client_cannot_view_inactive_studio(self):
+        self.assertFalse(user_can_view_studio(self.client_user, self.inactive_studio))
+
+    def test_staff_can_manage_studio(self):
+        self.assertTrue(user_can_manage_studio(self.staff, self.inactive_studio))
+
+    def test_client_cannot_request_budget_on_inactive_studio(self):
+        self.assertFalse(user_can_request_budget(self.client_user, self.inactive_studio))
+
+
+class SuperuserRoleTests(TestCase):
+    def test_create_superuser_sets_system_admin_role(self):
+        admin = CustomUser.objects.create_superuser(
+            email='admin@example.com',
+            password='testpass123',
+            cpf='52998224725',
+            phone='11999999999',
+        )
+        self.assertEqual(admin.role, SYSTEM_ADMIN)

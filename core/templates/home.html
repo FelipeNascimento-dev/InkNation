@@ -31,9 +31,9 @@
         </p>
     </section>
 
-    <section class="ink-map-section" id="ink-map">
+    <section class="ink-map-section" id="mapa">
         <div class="ink-map-wrapper">
-            <div class="ink-map" aria-label="Mapa de estúdios"></div>
+            <div id="ink-map" class="ink-map" aria-label="Mapa de estúdios"></div>
         </div>
         <p class="ink-map-hint">Passe o mouse sobre um pin para ver o card rápido do estúdio.</p>
     </section>
@@ -44,17 +44,13 @@
                 <h2>Estúdios em destaque</h2>
                 <p class="ink-section-subtitle">Selecionados pela comunidade InkNation.</p>
             </div>
-            <a href="#ink-map" class="ink-section-link">Ver no mapa →</a>
+            <a href="#mapa" class="ink-section-link">Ver no mapa →</a>
         </div>
         <div class="ink-carousel" id="ink-studio-carousel">
             {% for studio in featured_studios %}
             <a href="{% url 'studio-detail' slug=studio.slug %}" class="ink-studio-card">
                 <div class="ink-studio-card-media">
-                    {% if studio.cover_url %}
-                    <img src="{{ studio.cover_url }}" alt="{{ studio.name }}">
-                    {% else %}
-                    <div class="ink-studio-card-placeholder" aria-hidden="true"></div>
-                    {% endif %}
+                    <img src="{{ studio.cover_url }}" alt="{{ studio.name }}" loading="lazy">
                     <div class="ink-studio-card-overlay"></div>
                     <div class="ink-studio-card-body">
                         <h3>{{ studio.name }}</h3>

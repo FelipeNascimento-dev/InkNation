@@ -6,6 +6,7 @@ from studios.views import (
     StudioDetailView,
     StudioLocationsAPIView,
     StudioRegistrationView,
+    TattooArtistCreateView,
 )
 
 urlpatterns = [
@@ -17,6 +18,11 @@ urlpatterns = [
     path('studios/cadastrar/', StudioRegistrationView.as_view(), name='studio-register'),
     path('studios/<slug:slug>/', StudioDetailView.as_view(), name='studio-detail'),
     path('studios/<slug:slug>/dashboard/', StudioDashboardView.as_view(), name='studio-dashboard'),
+    path(
+        'studios/<slug:slug>/artistas/cadastrar/',
+        TattooArtistCreateView.as_view(),
+        name='artist-create',
+    ),
     path(
         'studios/<slug:slug>/portfolio/<uuid:artist_id>/edit/',
         PortfolioEditView.as_view(),

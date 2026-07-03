@@ -3,7 +3,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.http import Http404
 
-from core.constants import STUDIO_OWNER, STUDIO_STAFF, SYSTEM_ADMIN
+from core.constants import SYSTEM_ADMIN
+from core.utils.studio_access import user_can_manage_studio, user_is_studio_owner
 
 
 class RoleRequiredMixin(LoginRequiredMixin):
@@ -69,17 +70,9 @@ class _StudioScopedMixin(LoginRequiredMixin):
 
 class StudioOwnerRequiredMixin(_StudioScopedMixin):
     def _user_has_studio_access(self, user, studio):
-        return (
-            user.role == STUDIO_OWNER
-            and studio.owners.filter(pk=user.pk).exists()
-        )
+        return user_is_studio_owner(user, studio)
 
 
 class StudioStaffOrOwnerMixin(_StudioScopedMixin):
     def _user_has_studio_access(self, user, studio):
-        if user.role not in (STUDIO_OWNER, STUDIO_STAFF):
-            return False
-        return (
-            studio.owners.filter(pk=user.pk).exists()
-            or studio.staffs.filter(pk=user.pk).exists()
-        )
+        return user_can_manage_studio(user, studio)

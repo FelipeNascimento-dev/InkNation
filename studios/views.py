@@ -1,15 +1,24 @@
 from django.contrib import messages
 from django.db import transaction
+from django.db.models import Count, OuterRef, Subquery
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.generic import CreateView, DetailView, TemplateView, View
 
 from budgets.forms import BudgetRequestForm
 from budgets.models import BUDGET_STATUS_IN_ANALYSIS, BUDGET_STATUS_SENT, BudgetRequest
-from core.constants import CLIENT, STUDIO_OWNER, STUDIO_STAFF
-from core.mixins import RoleRequiredMixin, StudioStaffOrOwnerMixin
-from studios.forms import PortfolioItemForm, StudioRegistrationForm
-from studios.models import Studio, StudioApprovalRequest, TattooArtist
+from core.constants import STUDIO_OWNER, STUDIO_STAFF
+from core.mixins import RoleRequiredMixin, StudioOwnerRequiredMixin, StudioStaffOrOwnerMixin
+from core.utils.studio_access import (
+    user_can_manage_studio,
+    user_can_request_budget,
+    user_can_view_studio,
+    user_is_studio_owner,
+    user_is_studio_staff,
+)
+from core.utils.studio_media import resolve_studio_cover_absolute, resolve_studio_cover_for_instance
+from studios.forms import PortfolioItemForm, StudioRegistrationForm, TattooArtistForm
+from studios.models import PortfolioItem, Studio, StudioApprovalRequest, TattooArtist
 
 
 class StudioRegistrationView(RoleRequiredMixin, CreateView):
@@ -51,13 +60,7 @@ class StudioDetailView(DetailView):
 
     def get_object(self, queryset=None):
         studio = super().get_object(queryset)
-        if studio.is_active:
-            return studio
-        user = self.request.user
-        if user.is_authenticated and (
-            studio.owners.filter(pk=user.pk).exists()
-            or studio.staffs.filter(pk=user.pk).exists()
-        ):
+        if user_can_view_studio(self.request.user, studio):
             return studio
         raise Http404
 
@@ -65,17 +68,11 @@ class StudioDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         user = self.request.user
         studio = self.object
-        context['can_manage'] = (
-            user.is_authenticated
-            and (
-                studio.owners.filter(pk=user.pk).exists()
-                or studio.staffs.filter(pk=user.pk).exists()
-            )
-        )
-        can_request_budget = (
-            user.is_authenticated and user.role == CLIENT and studio.is_active
-        )
+        context['can_manage'] = user_can_manage_studio(user, studio)
+        can_request_budget = user_can_request_budget(user, studio)
         context['can_request_budget'] = can_request_budget
+        context['studio_cover_url'] = resolve_studio_cover_for_instance(studio)
+        context['artist_count'] = studio.artists.count()
         if can_request_budget:
             context['budget_form'] = BudgetRequestForm(studio=studio)
         return context
@@ -88,14 +85,8 @@ class StudioDashboardView(StudioStaffOrOwnerMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         studio = self.get_studio()
         user = self.request.user
-        is_owner = (
-            user.role == STUDIO_OWNER
-            and studio.owners.filter(pk=user.pk).exists()
-        )
-        is_staff = (
-            user.role == STUDIO_STAFF
-            and studio.staffs.filter(pk=user.pk).exists()
-        )
+        is_owner = user_is_studio_owner(user, studio)
+        is_staff = user_is_studio_staff(user, studio)
         budget_qs = BudgetRequest.objects.filter(studio=studio)
         context.update({
             'studio': studio,
@@ -107,8 +98,25 @@ class StudioDashboardView(StudioStaffOrOwnerMixin, TemplateView):
             'pending_budgets': budget_qs.filter(
                 status__in=(BUDGET_STATUS_SENT, BUDGET_STATUS_IN_ANALYSIS),
             ).count(),
+            'recent_budgets': budget_qs.select_related(
+                'client', 'artist',
+            ).order_by('-created_at')[:20],
+            'artist_form': TattooArtistForm(studio=studio) if is_owner else None,
         })
         return context
+
+
+class TattooArtistCreateView(StudioOwnerRequiredMixin, View):
+    def post(self, request, slug):
+        studio = self.get_studio()
+        form = TattooArtistForm(request.POST, studio=studio)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Artista cadastrado com sucesso.')
+        else:
+            for error in form.errors.values():
+                messages.error(request, error.as_text())
+        return redirect('studio-dashboard', slug=slug)
 
 
 class PortfolioEditView(StudioStaffOrOwnerMixin, View):
@@ -148,16 +156,46 @@ class PortfolioEditView(StudioStaffOrOwnerMixin, View):
 
 
 class StudioLocationsAPIView(View):
-    """Endpoint leve para o mapa da home — apenas id, name, lat, lng, slug."""
+    """Endpoint leve para o mapa da home."""
 
     def get(self, request):
-        locations = list(
+        cover_subquery = PortfolioItem.objects.filter(
+            artist__studio=OuterRef('pk'),
+        ).order_by('-created_at').values('image')[:1]
+
+        studios = (
             Studio.objects.filter(
                 is_active=True,
                 latitude__isnull=False,
                 longitude__isnull=False,
-            ).values('id', 'name', 'latitude', 'longitude', 'slug')
+            )
+            .annotate(
+                artist_count=Count('artists', distinct=True),
+                cover_image=Subquery(cover_subquery),
+            )
+            .values(
+                'id', 'name', 'latitude', 'longitude', 'slug',
+                'city', 'state', 'artist_count', 'cover_image',
+            )
         )
-        for item in locations:
-            item['id'] = str(item['id'])
+
+        locations = []
+        for item in studios:
+            entry = {
+                'id': str(item['id']),
+                'name': item['name'],
+                'latitude': item['latitude'],
+                'longitude': item['longitude'],
+                'slug': item['slug'],
+                'city': item['city'],
+                'state': item['state'],
+                'artist_count': item['artist_count'],
+            }
+            entry['cover_url'] = resolve_studio_cover_absolute(
+                request,
+                item['cover_image'],
+                item['state'],
+            )
+            locations.append(entry)
+
         return JsonResponse(locations, safe=False)

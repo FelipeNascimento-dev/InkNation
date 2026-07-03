@@ -9,19 +9,85 @@
 {% if is_owner %}
 <section class="ink-dashboard-section">
     <h2>Métricas gerenciais</h2>
-    <ul>
+    <ul class="ink-dashboard-stats">
         <li>Artistas: {{ artist_count }}</li>
         <li>Total de orçamentos: {{ budget_count }}</li>
     </ul>
+</section>
+
+<section class="ink-dashboard-section">
+    <h2>Cadastrar artista</h2>
+    <form
+        method="post"
+        action="{% url 'artist-create' slug=studio.slug %}"
+        class="ink-form ink-form-inline"
+    >
+        {% csrf_token %}
+        {{ artist_form.as_p }}
+        <button type="submit" class="ink-btn">Adicionar artista</button>
+    </form>
 </section>
 {% endif %}
 
 {% if show_operational %}
 <section class="ink-dashboard-section">
     <h2>Métricas operacionais</h2>
-    <ul>
+    <ul class="ink-dashboard-stats">
         <li>Orçamentos pendentes: {{ pending_budgets }}</li>
     </ul>
+</section>
+
+<section class="ink-dashboard-section">
+    <h2>Orçamentos recentes</h2>
+    {% if recent_budgets %}
+    <div class="ink-table-wrap">
+        <table class="ink-table">
+            <thead>
+                <tr>
+                    <th>Cliente</th>
+                    <th>Artista</th>
+                    <th>Descrição</th>
+                    <th>Status</th>
+                    <th>Ação</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for budget in recent_budgets %}
+                <tr>
+                    <td>{{ budget.client.username }}</td>
+                    <td>{{ budget.artist.name }}</td>
+                    <td>{{ budget.description|truncatechars:60 }}</td>
+                    <td>{{ budget.get_status_display }}</td>
+                    <td>
+                        <form
+                            method="post"
+                            action="{% url 'budget-status-update' slug=studio.slug budget_id=budget.id %}"
+                            class="ink-form-inline"
+                        >
+                            {% csrf_token %}
+                            <select name="status" class="ink-input ink-input-compact">
+                                {% if budget.status == 'sent' %}
+                                <option value="sent" selected>Enviado</option>
+                                <option value="in_analysis">Em análise</option>
+                                <option value="answered">Respondido</option>
+                                {% elif budget.status == 'in_analysis' %}
+                                <option value="in_analysis" selected>Em análise</option>
+                                <option value="answered">Respondido</option>
+                                {% else %}
+                                <option value="answered" selected>Respondido</option>
+                                {% endif %}
+                            </select>
+                            <button type="submit" class="ink-btn ink-btn-compact">Atualizar</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p>Nenhum orçamento recebido ainda.</p>
+    {% endif %}
 </section>
 {% endif %}
 
@@ -35,7 +101,7 @@
             </a>
         </li>
         {% empty %}
-        <li>Nenhum artista cadastrado. Adicione artistas pelo Django Admin.</li>
+        <li>Nenhum artista cadastrado.{% if is_owner %} Use o formulário acima para adicionar.{% endif %}</li>
         {% endfor %}
     </ul>
 </section>

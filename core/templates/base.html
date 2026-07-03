@@ -19,7 +19,7 @@
         </a>
 
         <div class="ink-nav-center">
-            <a href="{% url 'home' %}#ink-map">Mapa</a>
+            <a href="{% url 'home' %}#mapa">Mapa</a>
             <a href="{% url 'home' %}#studios">Estúdios</a>
             <a href="{% url 'home' %}#como-funciona">Como funciona</a>
         </div>
@@ -27,6 +27,11 @@
         <div class="ink-nav-links">
             {% if user.is_authenticated %}
                 <span class="ink-nav-user">{{ user.username }}</span>
+                {% for studio in nav_studios %}
+                    <a href="{% url 'studio-dashboard' slug=studio.slug %}" class="ink-nav-link">
+                        Dashboard — {{ studio.name|truncatechars:18 }}
+                    </a>
+                {% endfor %}
                 {% if user.role == 'STUDIO_OWNER' %}
                     <a href="{% url 'studio-register' %}" class="ink-btn ink-btn-nav">Cadastrar estúdio</a>
                 {% endif %}
