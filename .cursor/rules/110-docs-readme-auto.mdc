@@ -1,0 +1,39 @@
+---
+description: Regras para documentação, README e release notes em projetos Django.
+globs: "**/README.md,docs/**/*.md,.cursor/**/*.md"
+alwaysApply: false
+---
+
+# Documentação
+
+O README principal deve conter apenas informações reais do projeto.
+
+## Atualizar README quando houver
+
+- novo app;
+- nova tela;
+- nova view importante;
+- novo fluxo de permissão;
+- nova integração externa;
+- novo comando de execução;
+- nova dependência;
+- nova estrutura de pasta;
+- nova regra de negócio confirmada.
+
+## Alterações recentes
+
+Manter seção opcional:
+
+```md
+## Alterações recentes
+
+| Data | Tipo | Módulo/Pasta | Alteração | Impacto |
+| ---- | ---- | ------------ | --------- | ------- |
+```
+
+## Não documentar
+
+- funcionalidades imaginadas;
+- endpoints/telas ainda não implementados, salvo marcados como planejamento;
+- detalhes sensíveis;
+- regras de negócio inferidas sem confirmação.

@@ -8,11 +8,15 @@ from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = config('SECRET_KEY', default='django-insecure-28#pk2p9$dgkfe$3iiwe**9d&n+*sxu^v3icm_ucmx*d99_rlq')
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-dev-only-change-me')
 
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=lambda v: [s.strip() for s in v.split(',')])
+ALLOWED_HOSTS = config(
+    'ALLOWED_HOSTS',
+    default='localhost,127.0.0.1',
+    cast=lambda v: [s.strip() for s in v.split(',')],
+)
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -22,7 +26,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'core',
-    'accounts.apps.AccountsConfig',
+    'accounts',
     'studios',
     'budgets',
 ]

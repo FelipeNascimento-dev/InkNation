@@ -15,8 +15,7 @@
 <div class="ink-portfolio-grid">
     {% for item in portfolio_items %}
     <figure>
-        <img src="{{ item.image.url }}" alt="{{ item.title|default:artist.name }}">
-        {% if item.title %}<figcaption>{{ item.title }}</figcaption>{% endif %}
+        <img src="{{ item.image.url }}" alt="{{ artist.name }}">
     </figure>
     {% endfor %}
 </div>

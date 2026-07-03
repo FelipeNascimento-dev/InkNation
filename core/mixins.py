@@ -1,8 +1,9 @@
+from django.apps import apps
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.http import Http404
 
-from studios.models import Studio
+from core.constants import STUDIO_OWNER, STUDIO_STAFF, SYSTEM_ADMIN
 
 
 class RoleRequiredMixin(LoginRequiredMixin):
@@ -20,50 +21,63 @@ class SystemAdminRequiredMixin(LoginRequiredMixin):
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return self.handle_no_permission()
-        is_admin = (
-            request.user.is_superuser
-            or request.user.groups.filter(name='SYSTEM_ADMIN').exists()
-        )
+        is_admin = request.user.is_superuser or request.user.role == SYSTEM_ADMIN
         if not is_admin:
             raise PermissionDenied
         return super().dispatch(request, *args, **kwargs)
 
 
-class StudioAccessMixin(LoginRequiredMixin):
+class _StudioScopedMixin(LoginRequiredMixin):
+    """Resolve estúdio por slug ou id/pk na URL e valida acesso."""
+
     studio_url_kwarg = 'slug'
+    studio_id_kwarg = 'id'
 
     def get_studio(self):
-        if not hasattr(self.request, '_ink_studio'):
-            slug = self.kwargs[self.studio_url_kwarg]
-            self.request._ink_studio = Studio.objects.get(slug=slug)
-        return self.request._ink_studio
+        if hasattr(self, '_ink_studio'):
+            return self._ink_studio
+
+        Studio = apps.get_model('studios', 'Studio')
+        kwargs = self.kwargs
+
+        if self.studio_url_kwarg in kwargs:
+            lookup = {self.studio_url_kwarg: kwargs[self.studio_url_kwarg]}
+        elif self.studio_id_kwarg in kwargs:
+            lookup = {'pk': kwargs[self.studio_id_kwarg]}
+        elif 'pk' in kwargs:
+            lookup = {'pk': kwargs['pk']}
+        else:
+            raise Http404
+
+        try:
+            self._ink_studio = Studio.objects.get(**lookup)
+        except Studio.DoesNotExist:
+            raise Http404
+        return self._ink_studio
 
     def _user_has_studio_access(self, user, studio):
-        return (
-            studio.owners.filter(pk=user.pk).exists()
-            or studio.staffs.filter(pk=user.pk).exists()
-        )
+        raise NotImplementedError
 
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return self.handle_no_permission()
-        try:
-            studio = self.get_studio()
-        except Studio.DoesNotExist:
-            raise Http404
+        studio = self.get_studio()
         if not self._user_has_studio_access(request.user, studio):
             raise PermissionDenied
         return super().dispatch(request, *args, **kwargs)
 
 
-class StudioOwnerRequiredMixin(StudioAccessMixin):
+class StudioOwnerRequiredMixin(_StudioScopedMixin):
     def _user_has_studio_access(self, user, studio):
-        return user.role == 'owner' and studio.owners.filter(pk=user.pk).exists()
+        return (
+            user.role == STUDIO_OWNER
+            and studio.owners.filter(pk=user.pk).exists()
+        )
 
 
-class StudioOwnerOrStaffRequiredMixin(StudioAccessMixin):
+class StudioStaffOrOwnerMixin(_StudioScopedMixin):
     def _user_has_studio_access(self, user, studio):
-        if user.role not in ('owner', 'staff'):
+        if user.role not in (STUDIO_OWNER, STUDIO_STAFF):
             return False
         return (
             studio.owners.filter(pk=user.pk).exists()

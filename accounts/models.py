@@ -1,15 +1,11 @@
+import re
 import uuid
 
 from django.contrib.auth.models import AbstractUser, BaseUserManager
-from django.db import models
+from django.db import models, transaction
 
+from core.constants import CLIENT, ROLE_CHOICES
 from core.validators import validate_cpf
-
-ROLE_CHOICES = [
-    ('owner', 'Dono de Estúdio'),
-    ('staff', 'Funcionário'),
-    ('client', 'Cliente'),
-]
 
 
 class CustomUserManager(BaseUserManager):
@@ -38,7 +34,7 @@ class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=15)
     username = models.CharField(max_length=12, unique=True, blank=True)
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='client')
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default=CLIENT)
 
     objects = CustomUserManager()
 
@@ -52,13 +48,17 @@ class CustomUser(AbstractUser):
     def __str__(self):
         return self.username or self.email
 
-
-class UsernameSequence(models.Model):
-    last_number = models.PositiveIntegerField(default=0)
-
-    class Meta:
-        verbose_name = 'Sequência de Username'
-        verbose_name_plural = 'Sequências de Username'
-
-    def __str__(self):
-        return f'Último: INK{self.last_number:04d}'
+    def save(self, *args, **kwargs):
+        if self.cpf:
+            self.cpf = re.sub(r'\D', '', self.cpf)
+        if not self.username:
+            with transaction.atomic():
+                last = (
+                    CustomUser.objects.select_for_update()
+                    .exclude(username='')
+                    .order_by('-username')
+                    .first()
+                )
+                n = int(last.username.replace('INK', '')) + 1 if last else 1
+                self.username = f'INK{n:04d}'
+        super().save(*args, **kwargs)

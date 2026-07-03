@@ -1,6 +1,7 @@
 from django.contrib import admin, messages
 
 from studios.models import (
+    APPROVAL_STATUS_APPROVED,
     PortfolioItem,
     Studio,
     StudioApprovalRequest,
@@ -25,8 +26,8 @@ def approve_studio(modeladmin, request, queryset):
             studio=studio,
             defaults={'requested_by': studio.owners.first(), 'status': 'pending'},
         )
-        if approval.status != 'approved':
-            approval.status = 'approved'
+        if approval.status != APPROVAL_STATUS_APPROVED:
+            approval.status = APPROVAL_STATUS_APPROVED
             approval.save(update_fields=['status', 'updated_at'])
         approved += 1
     modeladmin.message_user(
@@ -57,13 +58,13 @@ class StudioApprovalRequestAdmin(admin.ModelAdmin):
 
 @admin.register(TattooArtist)
 class TattooArtistAdmin(admin.ModelAdmin):
-    list_display = ('name', 'studio', 'is_active', 'created_at')
-    list_filter = ('is_active', 'studio')
+    list_display = ('name', 'studio', 'created_at')
+    list_filter = ('studio',)
     search_fields = ('name', 'studio__name')
 
 
 @admin.register(PortfolioItem)
 class PortfolioItemAdmin(admin.ModelAdmin):
-    list_display = ('title', 'artist', 'created_at')
+    list_display = ('artist', 'created_at')
     list_filter = ('artist__studio',)
-    search_fields = ('title', 'artist__name')
+    search_fields = ('artist__name',)

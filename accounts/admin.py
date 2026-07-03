@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from accounts.models import CustomUser, UsernameSequence
+from accounts.models import CustomUser
 
 
 @admin.register(CustomUser)
@@ -24,18 +24,5 @@ class CustomUserAdmin(UserAdmin):
     def get_readonly_fields(self, request, obj=None):
         readonly = list(super().get_readonly_fields(request, obj))
         if not request.user.is_superuser:
-            readonly.append('role')
-            readonly.append('is_superuser')
-            readonly.append('is_staff')
+            readonly.extend(['role', 'is_superuser', 'is_staff'])
         return readonly
-
-
-@admin.register(UsernameSequence)
-class UsernameSequenceAdmin(admin.ModelAdmin):
-    list_display = ('last_number',)
-
-    def has_add_permission(self, request):
-        return not UsernameSequence.objects.exists()
-
-    def has_delete_permission(self, request, obj=None):
-        return False

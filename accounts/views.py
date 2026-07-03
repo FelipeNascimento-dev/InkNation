@@ -1,13 +1,9 @@
-import json
-
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.views import LoginView, LogoutView
-from django.db import transaction
-from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, TemplateView, View
+from django.views.generic import CreateView
 
 from accounts.forms import UserRegistrationForm
 from accounts.models import CustomUser

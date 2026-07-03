@@ -5,7 +5,13 @@
 {% block content %}
 <header class="ink-studio-header">
     <h1>{{ studio.name }}</h1>
-    <p>{{ studio.address }}, {{ studio.city }}/{{ studio.state }}</p>
+    <p>{{ studio.full_address }}</p>
+    {% if not studio.is_active %}
+    <p class="ink-badge ink-badge-pending">Aguardando aprovação</p>
+    {% endif %}
+    {% if can_manage %}
+    <p><a href="{% url 'studio-dashboard' slug=studio.slug %}">Ir para o dashboard</a></p>
+    {% endif %}
 </header>
 
 <section class="ink-artists">
@@ -13,10 +19,11 @@
     {% for artist in studio.artists.all %}
     <article class="ink-artist-card">
         <h3>{{ artist.name }}</h3>
-        {% if artist.specialties %}<p>{{ artist.specialties }}</p>{% endif %}
+        {% if artist.bio %}<p>{{ artist.bio }}</p>{% endif %}
+        {% if artist.specialties %}<p><strong>Especialidades:</strong> {{ artist.specialties }}</p>{% endif %}
         <div class="ink-portfolio-grid">
             {% for item in artist.portfolio_items.all %}
-            <img src="{{ item.image.url }}" alt="{{ item.title|default:artist.name }}">
+            <img src="{{ item.image.url }}" alt="{{ artist.name }}">
             {% endfor %}
         </div>
     </article>
@@ -27,12 +34,46 @@
 
 {% if can_request_budget %}
 <section class="ink-budget-section">
-    <h2>Solicitar orçamento</h2>
-    <form method="post" action="{% url 'budget-create' slug=studio.slug %}" enctype="multipart/form-data" class="ink-form">
-        {% csrf_token %}
-        {{ budget_form.as_p }}
-        <button type="submit" class="ink-btn">Enviar orçamento</button>
-    </form>
+    <button type="button" class="ink-btn" id="ink-budget-open">Solicitar orçamento</button>
 </section>
+
+<div id="ink-budget-modal" class="ink-modal" hidden>
+    <div class="ink-modal-backdrop"></div>
+    <div class="ink-modal-dialog" role="dialog" aria-labelledby="ink-budget-title" aria-modal="true">
+        <header class="ink-modal-header">
+            <h2 id="ink-budget-title">Solicitar orçamento</h2>
+            <button type="button" class="ink-modal-close" id="ink-budget-close" aria-label="Fechar">&times;</button>
+        </header>
+        <form
+            id="ink-budget-form"
+            class="ink-form"
+            method="post"
+            action="{% url 'budget-create' slug=studio.slug %}"
+            enctype="multipart/form-data"
+        >
+            {% csrf_token %}
+            <p>
+                <label for="id_artist">Artista</label>
+                {{ budget_form.artist }}
+            </p>
+            <p>
+                <label for="id_description">Descrição da tatuagem</label>
+                {{ budget_form.description }}
+            </p>
+            <p>
+                <label for="id_reference_image">Imagem de referência (opcional)</label>
+                {{ budget_form.reference_image }}
+            </p>
+            <button type="submit" class="ink-btn">Enviar orçamento</button>
+        </form>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if can_request_budget %}
+{% load static %}
+<script src="{% static 'js/budget-modal.js' %}"></script>
 {% endif %}
 {% endblock %}

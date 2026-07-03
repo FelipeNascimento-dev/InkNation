@@ -5,22 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}InkNation{% endblock %}</title>
     {% load static %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/inknation.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
     <nav class="ink-nav">
-        <a href="{% url 'home' %}" class="ink-logo">InkNation</a>
+        <a href="{% url 'home' %}" class="ink-logo">
+            <span class="ink-logo-dot" aria-hidden="true"></span>
+            <span class="ink-logo-ink">INK</span>NATION
+        </a>
+
+        <div class="ink-nav-center">
+            <a href="{% url 'home' %}#ink-map">Mapa</a>
+            <a href="{% url 'home' %}#studios">Estúdios</a>
+            <a href="{% url 'home' %}#como-funciona">Como funciona</a>
+        </div>
+
         <div class="ink-nav-links">
             {% if user.is_authenticated %}
-                <span>{{ user.username }}</span>
-                {% if user.role == 'owner' %}
-                    <a href="{% url 'studio-register' %}">Cadastrar estúdio</a>
+                <span class="ink-nav-user">{{ user.username }}</span>
+                {% if user.role == 'STUDIO_OWNER' %}
+                    <a href="{% url 'studio-register' %}" class="ink-btn ink-btn-nav">Cadastrar estúdio</a>
                 {% endif %}
-                <a href="{% url 'accounts:logout' %}">Sair</a>
+                <a href="{% url 'accounts:logout' %}" class="ink-nav-link">Sair</a>
             {% else %}
-                <a href="{% url 'accounts:login' %}">Entrar</a>
-                <a href="{% url 'accounts:register' %}">Cadastrar</a>
+                <a href="{% url 'accounts:login' %}" class="ink-nav-link">Entrar</a>
+                <a href="{% url 'accounts:register' %}" class="ink-btn ink-btn-nav">Cadastrar estúdio</a>
             {% endif %}
         </div>
     </nav>
@@ -33,12 +46,12 @@
     </ul>
     {% endif %}
 
-    <main class="ink-main">
+    <main class="ink-main{% block main_class %}{% endblock %}">
         {% block content %}{% endblock %}
     </main>
 
     <footer class="ink-footer">
-        <p>&copy; InkNation</p>
+        <p>&copy; {% now "Y" %} InkNation — Feito para a cena da tatuagem no Brasil.</p>
     </footer>
 
     {% block extra_js %}{% endblock %}

@@ -4,25 +4,39 @@
 
 {% block content %}
 <h1>Dashboard — {{ studio.name }}</h1>
+<p><a href="{% url 'studio-detail' slug=studio.slug %}">Ver página pública</a></p>
 
-<section class="metrics-owner" {% if not is_owner %}hidden{% endif %}>
-    <h2>Métricas do dono</h2>
+{% if is_owner %}
+<section class="ink-dashboard-section">
+    <h2>Métricas gerenciais</h2>
     <ul>
-        <li>Artistas ativos: {{ artist_count }}</li>
+        <li>Artistas: {{ artist_count }}</li>
         <li>Total de orçamentos: {{ budget_count }}</li>
     </ul>
 </section>
+{% endif %}
 
-<section class="metrics-staff" {% if not is_staff %}hidden{% endif %}>
+{% if show_operational %}
+<section class="ink-dashboard-section">
     <h2>Métricas operacionais</h2>
     <ul>
         <li>Orçamentos pendentes: {{ pending_budgets }}</li>
     </ul>
 </section>
+{% endif %}
 
-<ul class="ink-dashboard-links">
-    {% for artist in studio.artists.all %}
-    <li><a href="{% url 'portfolio-edit' slug=studio.slug artist_id=artist.id %}">Editar portfólio — {{ artist.name }}</a></li>
-    {% endfor %}
-</ul>
+<section class="ink-dashboard-section">
+    <h2>Portfólios</h2>
+    <ul class="ink-dashboard-links">
+        {% for artist in studio.artists.all %}
+        <li>
+            <a href="{% url 'portfolio-edit' slug=studio.slug artist_id=artist.id %}">
+                Editar portfólio — {{ artist.name }}
+            </a>
+        </li>
+        {% empty %}
+        <li>Nenhum artista cadastrado. Adicione artistas pelo Django Admin.</li>
+        {% endfor %}
+    </ul>
+</section>
 {% endblock %}

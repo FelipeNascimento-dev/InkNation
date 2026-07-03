@@ -1,30 +1,109 @@
 {% extends "base.html" %}
-{% load static %}
 
-{% block title %}InkNation — Encontre seu estúdio{% endblock %}
+{% block title %}InkNation{% endblock %}
+
+{% block body_class %}ink-page-home{% endblock %}
+{% block main_class %} ink-main-home{% endblock %}
+
+{% block extra_css %}
+<link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+>
+{% endblock %}
 
 {% block content %}
-<section class="ink-home-map">
-    <div id="map" class="ink-map"></div>
-</section>
+<div class="ink-home">
+    <section class="ink-home-hero">
+        <span class="ink-hero-badge">
+            <span class="ink-hero-badge-dot" aria-hidden="true"></span>
+            Marketplace de tatuagem
+        </span>
+        <h1>
+            Encontre o estúdio<br>
+            <span class="ink-hero-accent">que combina com você.</span>
+        </h1>
+        <p>
+            Explore estúdios geolocalizados no Brasil inteiro, descubra portfólios
+            e solicite orçamentos direto pelo mapa.
+        </p>
+    </section>
 
-<section class="ink-carousel">
-    <h2>Estúdios em destaque</h2>
-    <div class="ink-carousel-track">
-        {% for studio in featured_studios %}
-        <a href="{% url 'studio-detail' slug=studio.slug %}" class="ink-carousel-card">
-            <h3>{{ studio.name }}</h3>
-            <p>{{ studio.city }}/{{ studio.state }}</p>
-        </a>
-        {% empty %}
-        <p>Nenhum estúdio ativo no momento.</p>
-        {% endfor %}
-    </div>
-</section>
+    <section class="ink-map-section" id="ink-map">
+        <div class="ink-map-wrapper">
+            <div class="ink-map" aria-label="Mapa de estúdios"></div>
+        </div>
+        <p class="ink-map-hint">Passe o mouse sobre um pin para ver o card rápido do estúdio.</p>
+    </section>
+
+    <section class="ink-carousel-section" id="studios">
+        <div class="ink-section-header">
+            <div>
+                <h2>Estúdios em destaque</h2>
+                <p class="ink-section-subtitle">Selecionados pela comunidade InkNation.</p>
+            </div>
+            <a href="#ink-map" class="ink-section-link">Ver no mapa →</a>
+        </div>
+        <div class="ink-carousel" id="ink-studio-carousel">
+            {% for studio in featured_studios %}
+            <a href="{% url 'studio-detail' slug=studio.slug %}" class="ink-studio-card">
+                <div class="ink-studio-card-media">
+                    {% if studio.cover_url %}
+                    <img src="{{ studio.cover_url }}" alt="{{ studio.name }}">
+                    {% else %}
+                    <div class="ink-studio-card-placeholder" aria-hidden="true"></div>
+                    {% endif %}
+                    <div class="ink-studio-card-overlay"></div>
+                    <div class="ink-studio-card-body">
+                        <h3>{{ studio.name }}</h3>
+                        <p class="ink-studio-card-location">{{ studio.city }} · {{ studio.state }}</p>
+                        <div class="ink-studio-card-footer">
+                            <p class="ink-studio-card-meta">
+                                {{ studio.artist_count }}
+                                artista{{ studio.artist_count|pluralize }}
+                            </p>
+                            <span class="ink-studio-card-link">Ver portfólio →</span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+            {% empty %}
+            <p class="ink-carousel-empty">Nenhum estúdio ativo no momento.</p>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="ink-how-section" id="como-funciona">
+        <h2>Como funciona</h2>
+        <div class="ink-how-grid">
+            <div class="ink-how-step">
+                <span class="ink-how-number">1</span>
+                <h3>Explore o mapa</h3>
+                <p>Navegue pelo Brasil e descubra estúdios próximos a você com pins interativos.</p>
+            </div>
+            <div class="ink-how-step">
+                <span class="ink-how-number">2</span>
+                <h3>Veja o portfólio</h3>
+                <p>Conheça os artistas, estilos e trabalhos de cada estúdio antes de decidir.</p>
+            </div>
+            <div class="ink-how-step">
+                <span class="ink-how-number">3</span>
+                <h3>Solicite orçamento</h3>
+                <p>Envie sua ideia diretamente pelo perfil do estúdio e receba um retorno personalizado.</p>
+            </div>
+        </div>
+    </section>
+</div>
 {% endblock %}
 
 {% block extra_js %}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+{% load static %}
+<script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+></script>
 <script src="{% static 'js/home-map.js' %}"></script>
 {% endblock %}

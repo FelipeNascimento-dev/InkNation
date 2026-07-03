@@ -3,19 +3,20 @@ import uuid
 from django.conf import settings
 from django.db import models
 
-from studios.models import Studio, TattooArtist
+from core.models import BaseModel
 
-STATUS_CHOICES = [
-    ('sent', 'Enviado'),
-    ('in_review', 'Em análise'),
-    ('quoted', 'Orçado'),
-    ('accepted', 'Aceito'),
-    ('rejected', 'Rejeitado'),
-    ('cancelled', 'Cancelado'),
+BUDGET_STATUS_SENT = 'sent'
+BUDGET_STATUS_IN_ANALYSIS = 'in_analysis'
+BUDGET_STATUS_ANSWERED = 'answered'
+
+BUDGET_STATUS_CHOICES = [
+    (BUDGET_STATUS_SENT, 'Enviado'),
+    (BUDGET_STATUS_IN_ANALYSIS, 'Em análise'),
+    (BUDGET_STATUS_ANSWERED, 'Respondido'),
 ]
 
 
-class BudgetRequest(models.Model):
+class BudgetRequest(BaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     client = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -23,28 +24,26 @@ class BudgetRequest(models.Model):
         related_name='budget_requests',
     )
     studio = models.ForeignKey(
-        Studio,
+        'studios.Studio',
         on_delete=models.CASCADE,
         related_name='budget_requests',
     )
     artist = models.ForeignKey(
-        TattooArtist,
+        'studios.TattooArtist',
         on_delete=models.CASCADE,
         related_name='budget_requests',
     )
     description = models.TextField()
     reference_image = models.ImageField(
-        upload_to='budgets/%Y/%m/',
+        upload_to='budgets/',
         blank=True,
         null=True,
     )
     status = models.CharField(
         max_length=20,
-        choices=STATUS_CHOICES,
-        default='sent',
+        choices=BUDGET_STATUS_CHOICES,
+        default=BUDGET_STATUS_SENT,
     )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = 'solicitação de orçamento'
@@ -52,4 +51,4 @@ class BudgetRequest(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f'Orçamento {self.client} → {self.studio.name}'
+        return f'Orçamento de {self.client.username} — {self.studio.name}'
